@@ -94,7 +94,7 @@ resource noPrivateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-
     natGateway: {
       id: nat.id
     }
-    addressPrefix: '10.0.0.0/24'
+    addressPrefix: '10.0.1.0/24'
     privateEndpointNetworkPolicies: 'Disabled'
 
   }
