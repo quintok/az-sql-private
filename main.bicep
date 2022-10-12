@@ -33,6 +33,7 @@ param location string = resourceGroup().location
 var hostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
 var websiteName = 'website${uniqueString(resourceGroup().id)}'
 var sqlserverName = 'sqlServerName${uniqueString(resourceGroup().id)}'
+var sqlPoolName = 'sqlElasticPool${uniqueString(resourceGroup().id)}'
 var databaseName = 'sampledb'
 var privateEndpointName = 'sqlserver-private-endpoint'
 var privateDnsZoneName = 'privatelink${environment().suffixes.sqlServerHostname}'
@@ -59,11 +60,30 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2021-02-01-preview' = {
     displayName: 'Database'
   }
   sku: {
-    name: 'Basic'
+    name: 'ElasticPool'
+    tier: 'Basic'
+    capacity: 0
   }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
-    maxSizeBytes: 1073741824
+    elasticPoolId: sqlElasticPool.id
+  }
+}
+
+resource sqlElasticPool 'Microsoft.Sql/servers/elasticPools@2022-05-01-preview' = {
+  parent: sqlServer
+  location: location
+  name: sqlPoolName
+  sku: {
+    name: 'BasicPool'
+    tier: 'Basic'
+    capacity: 50
+  }
+  properties: {
+    perDatabaseSettings: {
+      minCapacity: 0
+      maxCapacity: 50
+    }
   }
 }
 
