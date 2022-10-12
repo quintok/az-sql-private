@@ -34,6 +34,8 @@ var hostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
 var websiteName = 'website${uniqueString(resourceGroup().id)}'
 var sqlserverName = 'sqlServer${uniqueString(resourceGroup().id)}'
 var databaseName = 'sampledb'
+var privateDnsZoneName = 'privatelink${environment().suffixes.sqlServerHostname}'
+var pvtEndpointDnsGroupName = '${privateEndpointName}/mydnsgroupname'
 
 resource sqlServer 'Microsoft.Sql/servers@2021-02-01-preview' = {
   name: sqlserverName
@@ -133,6 +135,46 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
   }
   dependsOn: [
     vnet
+  ]
+}
+
+// -- DNS
+
+resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: privateDnsZoneName
+  location: 'global'
+  properties: {}
+  dependsOn: [
+    vnet
+  ]
+}
+
+resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateDnsZone
+  name: '${privateDnsZoneName}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+resource pvtEndpointDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-05-01' = {
+  name: pvtEndpointDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config1'
+        properties: {
+          privateDnsZoneId: privateDnsZone.id
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    privateEndpoint
   ]
 }
 
