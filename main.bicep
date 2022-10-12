@@ -76,10 +76,11 @@ resource allowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-02-01
   }
 }
 
-// --- VNet
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: uniqueString(resourceGroup().id)
+// --- VNet with no private link
+
+resource publicVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+  name: 'public${uniqueString(resourceGroup().id)}'
   location: location
   properties: {
     addressSpace: {
@@ -90,22 +91,38 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   }
 }
 
-resource noPrivateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: vnet
-  name: 'no-private-subnet'
+
+resource publicSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
+  parent: privateVnet
+  name: 'public-subnet'
   properties: {
     natGateway: {
       id: nat.id
     }
-    addressPrefix: '10.0.1.0/24'
+    addressPrefix: '10.0.0.0/24'
     privateEndpointNetworkPolicies: 'Disabled'
-
   }
 }
 
+
+// --- VNET with private link
+
+resource privateVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+  name: 'private${uniqueString(resourceGroup().id)}'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+  }
+}
+
+
 resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: vnet
-  name: 'private-subnet'
+  parent: privateVnet
+  name: 'private-link-subnet'
   properties: {
     natGateway: {
       id: nat.id
@@ -135,7 +152,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
     ]
   }
   dependsOn: [
-    vnet
+    privateVnet
   ]
 }
 
@@ -146,7 +163,7 @@ resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   location: 'global'
   properties: {}
   dependsOn: [
-    vnet
+    privateVnet
   ]
 }
 
@@ -157,7 +174,7 @@ resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLin
   properties: {
     registrationEnabled: false
     virtualNetwork: {
-      id: vnet.id
+      id: privateVnet.id
     }
   }
 }
