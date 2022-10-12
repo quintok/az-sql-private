@@ -22,4 +22,11 @@ jobs:
         run: |
           az account show
           az group create --location ${{ secrets.AZURE_LOCATION }} --resource-group ${{ secrets.RESOURCE_GROUP_NAME }}
-          az deployment group create --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --template-file ./main.bicep --parameters ./main.parameters.json
+      - name: 'Deploy Bicep'
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ secrets.RESOURCE_GROUP_NAME }}
+          template: ./main.bicep
+          parameters: sqlAdministratorLogin=${{ secrets.SQL_ADMIN_LOGIN }},sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+          failOnStderr: true
