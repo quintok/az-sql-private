@@ -97,7 +97,7 @@ resource publicSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
   name: 'public-subnet'
   properties: {
     natGateway: {
-      id: nat.id
+      id: publicNat.id
     }
     addressPrefix: '10.0.0.0/24'
     privateEndpointNetworkPolicies: 'Disabled'
@@ -125,7 +125,7 @@ resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01
   name: 'private-link-subnet'
   properties: {
     natGateway: {
-      id: nat.id
+      id: privateNat.id
     }
     addressPrefix: '10.0.0.0/24'
     privateEndpointNetworkPolicies: 'Disabled'
@@ -196,9 +196,10 @@ resource pvtEndpointDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
   ]
 }
 
+// -- NAT for private vnet
 
-resource natPublicPrefix 'Microsoft.Network/publicIPPrefixes@2021-08-01' = {
-  name: 'nat-gateway-publicIPPrefix'
+resource privateNatPublicPrefix 'Microsoft.Network/publicIPPrefixes@2021-08-01' = {
+  name: 'private-nat-gateway-publicIPPrefix'
   location: location
   sku: {
     name: 'Standard'
@@ -208,7 +209,52 @@ resource natPublicPrefix 'Microsoft.Network/publicIPPrefixes@2021-08-01' = {
   }
 }
 
-resource natPublicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+resource privateNatPublicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+  name: 'private-nat-gateway-publicIP'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource privateNat 'Microsoft.Network/natGateways@2021-08-01' = {
+  location: location
+  name: 'private-nat'
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    idleTimeoutInMinutes: 10
+    publicIpAddresses: [
+      {
+        id: privateNatPublicIP.id
+      }
+    ]
+    publicIpPrefixes: [
+      {
+        id: privateNatPublicPrefix.id
+      }
+    ]
+  }
+}
+
+// -- NAT for public vnet
+
+resource publicNatPublicPrefix 'Microsoft.Network/publicIPPrefixes@2021-08-01' = {
+  name: 'public-nat-gateway-publicIPPrefix'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    prefixLength: 30
+  }
+}
+
+resource publicNatPublicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
   name: 'nat-gateway-publicIP'
   location: location
   sku: {
@@ -219,7 +265,7 @@ resource natPublicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
   }
 }
 
-resource nat 'Microsoft.Network/natGateways@2021-08-01' = {
+resource publicNat 'Microsoft.Network/natGateways@2021-08-01' = {
   location: location
   name: 'example-nat'
   sku: {
@@ -229,12 +275,12 @@ resource nat 'Microsoft.Network/natGateways@2021-08-01' = {
     idleTimeoutInMinutes: 10
     publicIpAddresses: [
       {
-        id: natPublicIP.id
+        id: publicNatPublicIP.id
       }
     ]
     publicIpPrefixes: [
       {
-        id: natPublicPrefix.id
+        id: publicNatPublicPrefix.id
       }
     ]
   }
