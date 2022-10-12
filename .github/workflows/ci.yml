@@ -21,3 +21,4 @@ jobs:
       - name: 'Run az commands'
         run: |
           az account show
+          az group create --location ${{ secrets.AZURE_LOCATION }} --resource-group ${{ secrets.RESOURCE_GROUP_NAME }}
