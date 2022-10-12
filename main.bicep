@@ -34,6 +34,7 @@ var hostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
 var websiteName = 'website${uniqueString(resourceGroup().id)}'
 var sqlserverName = 'sqlServer${uniqueString(resourceGroup().id)}'
 var databaseName = 'sampledb'
+var privateEndpointName = 'sqlserver-private-endpoint'
 var privateDnsZoneName = 'privatelink${environment().suffixes.sqlServerHostname}'
 var pvtEndpointDnsGroupName = '${privateEndpointName}/mydnsgroupname'
 
@@ -115,7 +116,7 @@ resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01
 }
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
-  name: 'sqlserver-private-endpoint'
+  name: privateEndpointName
   location: location
   properties: {
     subnet: {
@@ -123,7 +124,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
     }
     privateLinkServiceConnections: [
       {
-        name: 'sqlserver-private-endpoint'
+        name: privateEndpointName
         properties: {
           privateLinkServiceId: sqlServer.id
           groupIds: [
