@@ -102,7 +102,7 @@ resource noPrivateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-
 
 resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
   parent: vnet
-  name: 'no-private-subnet'
+  name: 'private-subnet'
   properties: {
     natGateway: {
       id: nat.id
