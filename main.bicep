@@ -73,6 +73,115 @@ resource allowAllWindowsAzureIps 'Microsoft.Sql/servers/firewallRules@2021-02-01
   }
 }
 
+// --- VNet
+
+resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+  name: uniqueString(resourceGroup().id)
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+  }
+}
+
+resource noPrivateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
+  parent: vnet
+  name: 'no-private-subnet'
+  properties: {
+    natGateway: {
+      id: nat.id
+    }
+    addressPrefix: '10.0.0.0/24'
+    privateEndpointNetworkPolicies: 'Disabled'
+
+  }
+}
+
+resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
+  parent: vnet
+  name: 'no-private-subnet'
+  properties: {
+    natGateway: {
+      id: nat.id
+    }
+    addressPrefix: '10.0.0.0/24'
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+}
+
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
+  name: 'sqlserver-private-endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: privateLinkSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'sqlserver-private-endpoint'
+        properties: {
+          privateLinkServiceId: sqlServer.id
+          groupIds: [
+            'sqlServer'
+          ]
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    vnet
+  ]
+}
+
+
+resource natPublicPrefix 'Microsoft.Network/publicIPPrefixes@2021-08-01' = {
+  name: 'nat-gateway-publicIPPrefix'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    prefixLength: 30
+  }
+}
+
+resource natPublicIP 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+  name: 'nat-gateway-publicIP'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource nat 'Microsoft.Network/natGateways@2021-08-01' = {
+  location: location
+  name: 'example-nat'
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    idleTimeoutInMinutes: 10
+    publicIpAddresses: [
+      {
+        id: natPublicIP.id
+      }
+    ]
+    publicIpPrefixes: [
+      {
+        id: natPublicPrefix.id
+      }
+    ]
+  }
+}
+
+// -- App Service Plan
+
 resource hostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
   name: hostingPlanName
   location: location
