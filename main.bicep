@@ -82,7 +82,7 @@ resource sqlElasticPool 'Microsoft.Sql/servers/elasticPools@2022-05-01-preview' 
   properties: {
     perDatabaseSettings: {
       minCapacity: 0
-      maxCapacity: 50
+      maxCapacity: 5
     }
   }
 }
