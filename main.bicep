@@ -32,7 +32,7 @@ param location string = resourceGroup().location
 
 var hostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
 var websiteName = 'website${uniqueString(resourceGroup().id)}'
-var sqlserverName = 'sqlServer${uniqueString(resourceGroup().id)}'
+var sqlserverName = 'sqlServerName${uniqueString(resourceGroup().id)}'
 var databaseName = 'sampledb'
 var privateEndpointName = 'sqlserver-private-endpoint'
 var privateDnsZoneName = 'privatelink${environment().suffixes.sqlServerHostname}'
