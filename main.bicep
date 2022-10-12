@@ -93,7 +93,7 @@ resource publicVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
 
 
 resource publicSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: privateVnet
+  parent: publicVnet
   name: 'public-subnet'
   properties: {
     natGateway: {
