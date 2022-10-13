@@ -398,7 +398,7 @@ resource privateAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
   parent: privateWebsite
   name: 'appsettings'
   properties: {
-    WEBSITE_NODE_DEFAULT_VERSION: 'Production'
+    DOTNET_ENVIRONMENT: 'Production'
   }
 }
 
