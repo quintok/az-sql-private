@@ -52,4 +52,10 @@ jobs:
           app-name: websitebmchpnzjithzo
           package: ./application/publish
           publish-profile: ${{ secrets.PUBLISH_PROFILE }}
+      - name: 'Deploy private application'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: privatewebsitebmchpnzjithzo
+          package: ./application/publish
+          publish-profile: ${{ secrets.PRIVATE_PUBLISH_PROFILE }}
         
