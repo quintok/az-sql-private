@@ -36,13 +36,6 @@ jobs:
       - name: 'Check sqlserver DNS result from public'
         run: | 
           az rest --method post --resource https://management.core.windows.net --url https://websitebmchpnzjithzo.scm.azurewebsites.net/api/command --body '{"command": "nslookup ${{ steps.deploy.outputs.sqlserverDns }}","dir": "C:\\home\\site\\wwwroot"}' --headers Content-Type=application/json
-      - name: 'Fetch DeploymentSettings'
-        run: |
-          az rest --method Post --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.publicWebsiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
-          pip3 install yq
-          PUBLISH_SETTINGS=$(xq -x .publishData my.PublishSettings)
-          echo "::add-mask::$PUBLISH_SETTINGS"
-          echo PUBLISH_SETTINGS=$PUBLISH_SETTINGS >> $GITHUB_ENV
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
@@ -58,5 +51,5 @@ jobs:
         with:
           app-name: Website
           package: ./application/publish
-          publish-profile: $PUBLISH_SETTINGS
+          publish-profile: ${{ secrets.PUBLISH_PROFILE }}
         
