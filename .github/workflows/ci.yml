@@ -8,7 +8,7 @@ env:
   DOTNET_VERSION: 6.0.400
 
 jobs:
-  build-and-deploy:
+  deploy-infra:
     permissions:
       id-token: write
       contents: read
@@ -43,7 +43,6 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: dotnet build and publish
         run: |
-          dotnet restore application
           dotnet build --configuration Release --project application
           dotnet publish -c Release --project application -o ./publish
           az rest --method get --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
