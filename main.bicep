@@ -13,7 +13,7 @@
   'P3'
   'P4'
 ])
-param skuName string = 'F1'
+param skuName string = 'S1'
 
 @description('Describes plan\'s instance count')
 @minValue(1)
@@ -154,6 +154,9 @@ resource privateVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
       {
         name: 'private-link-app-subnet'
         properties: {
+          natGateway: {
+            id: privateNat.id
+          }
           addressPrefix: '10.0.0.0/24'
           delegations: [
             {
@@ -344,6 +347,10 @@ resource website 'Microsoft.Web/sites@2020-12-01' = {
   }
   properties: {
     serverFarmId: hostingPlan.id
+    virtualNetworkSubnetId: publicVnet.properties.subnets[0].id
+    siteConfig: {
+      vnetRouteAllEnabled: true
+    }
   }
 }
 
