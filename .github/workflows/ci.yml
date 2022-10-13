@@ -49,7 +49,7 @@ jobs:
       - name: 'Deploy public application'
         uses: azure/webapps-deploy@v2
         with:
-          app-name: Website
+          app-name: websitebmchpnzjithzo
           package: ./application/publish
           publish-profile: ${{ secrets.PUBLISH_PROFILE }}
         
