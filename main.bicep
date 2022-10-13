@@ -108,19 +108,18 @@ resource publicVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         '10.0.0.0/16'
       ]
     }
-  }
-}
-
-
-resource publicSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: publicVnet
-  name: 'public-subnet'
-  properties: {
-    natGateway: {
-      id: publicNat.id
-    }
-    addressPrefix: '10.0.0.0/24'
-    privateEndpointNetworkPolicies: 'Disabled'
+    subnets: [
+      {
+        name: 'public-subnet'
+        properties: {
+          natGateway: {
+            id: publicNat.id
+          }
+          addressPrefix: '10.0.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
   }
 }
 
@@ -136,28 +135,28 @@ resource privateVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         '10.0.0.0/16'
       ]
     }
+    subnets: [
+      {
+        name: 'private-link-subnet'
+        properties: {
+          natGateway: {
+            id: privateNat.id
+          }
+          addressPrefix: '10.0.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
   }
 }
 
-
-resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: privateVnet
-  name: 'private-link-subnet'
-  properties: {
-    natGateway: {
-      id: privateNat.id
-    }
-    addressPrefix: '10.0.0.0/24'
-    privateEndpointNetworkPolicies: 'Disabled'
-  }
-}
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
   name: privateEndpointName
   location: location
   properties: {
     subnet: {
-      id: privateLinkSubnet.id
+      id: privateVnet.properties.subnets[0].id
     }
     privateLinkServiceConnections: [
       {
@@ -171,9 +170,6 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
       }
     ]
   }
-  dependsOn: [
-    privateVnet
-  ]
 }
 
 // -- DNS
@@ -356,4 +352,4 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-output sqlserverDns string = 'sqlserverName${environment().suffixes.sqlServerHostname}'
+output sqlserverDns string = '${sqlserverName}${environment().suffixes.sqlServerHostname}'
