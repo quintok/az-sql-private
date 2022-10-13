@@ -38,7 +38,7 @@ jobs:
           az rest --method post --resource https://management.core.windows.net --url https://websitebmchpnzjithzo.scm.azurewebsites.net/api/command --body '{"command": "nslookup ${{ steps.deploy.outputs.sqlserverDns }}","dir": "C:\\home\\site\\wwwroot"}' --headers Content-Type=application/json
       - name: 'Fetch DeploymentSettings'
         run: |
-          az rest --method get --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
+          az rest --method Post --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
