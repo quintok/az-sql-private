@@ -2,7 +2,10 @@
 on:
   push:
     branches:
-      - main  
+      - main
+
+env:
+  DOTNET_VERSION: 6.0.400
 
 jobs:
   build-and-deploy:
@@ -31,5 +34,23 @@ jobs:
           template: ./main.bicep
           parameters: sqlAdministratorLogin=${{ secrets.SQL_ADMIN_LOGIN }} sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
           failOnStderr: true
-      - run: | 
+      - name: 'Check sqlserver DNS result from public'
+        run: | 
          az rest --method post --resource https://management.core.windows.net --url https://websitebmchpnzjithzo.scm.azurewebsites.net/api/command --body '{"command": "nslookup ${{ steps.deploy.outputs.sqlserverDns }}","dir": "C:\\home\\site\\wwwroot"}' --headers Content-Type=application/json
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: dotnet build and publish
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --project application
+          dotnet publish -c Release --project application -o ./publish
+          az rest --method get --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
+      - name: 'Deploy public application'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: Website
+          package: ./publish
+          publish-profile: ./my.PublishSettings
+        

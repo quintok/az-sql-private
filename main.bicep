@@ -380,3 +380,4 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 output sqlserverDns string = '${sqlserverName}${environment().suffixes.sqlServerHostname}'
 output publicWebsiteScmDns string = '${websiteName}.scm.azurewebsites.net'
+output websiteName string = websiteName
