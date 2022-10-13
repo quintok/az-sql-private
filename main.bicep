@@ -354,6 +354,14 @@ resource website 'Microsoft.Web/sites@2020-12-01' = {
   }
 }
 
+resource appSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: website
+  name: 'appsettings'
+  properties: {
+    WEBSITE_NODE_DEFAULT_VERSION: 'Production'
+  }
+}
+
 resource webSiteConnectionStrings 'Microsoft.Web/sites/config@2020-12-01' = {
   parent: website
   name: 'connectionstrings'
