@@ -39,9 +39,9 @@ jobs:
       - name: 'Fetch DeploymentSettings'
         run: |
           az rest --method Post --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.publicWebsiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
-          PUBLISH_SETTINGS=$(cat my.PublishSettings)
+          pip3 install yq
+          PUBLISH_SETTINGS=$(xq -x .publishData my.PublishSettings)
           echo "::add-mask::$PUBLISH_SETTINGS"
-          echo $PUBLISH_SETTINGS | base64
           echo PUBLISH_SETTINGS=$PUBLISH_SETTINGS >> $GITHUB_ENV
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
