@@ -117,6 +117,14 @@ resource publicVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
           }
           addressPrefix: '10.0.0.0/24'
           privateEndpointNetworkPolicies: 'Disabled'
+          delegations: [
+            {
+              name: 'app-service-delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
         }
       }
     ]
@@ -139,11 +147,22 @@ resource privateVnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
       {
         name: 'private-link-subnet'
         properties: {
-          natGateway: {
-            id: privateNat.id
-          }
-          addressPrefix: '10.0.0.0/24'
+          addressPrefix: '10.0.1.0/24'
           privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+      {
+        name: 'private-link-app-subnet'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+          delegations: [
+            {
+              name: 'app-service-delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
         }
       }
     ]
@@ -353,3 +372,4 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 output sqlserverDns string = '${sqlserverName}${environment().suffixes.sqlServerHostname}'
+output publicWebsiteScmDns string = '${websiteName}.scm.azurewebsites.net'
