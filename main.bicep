@@ -30,8 +30,10 @@ param sqlAdministratorLoginPassword string
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-var hostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
-var websiteName = 'website${uniqueString(resourceGroup().id)}'
+var publicHostingPlanName = 'hostingplan${uniqueString(resourceGroup().id)}'
+var privateHostingPlanName = 'privatehostingplan${uniqueString(resourceGroup().id)}'
+var publicWebsiteName = 'website${uniqueString(resourceGroup().id)}'
+var privateWebsiteName = 'privatewebsite${uniqueString(resourceGroup().id)}'
 var sqlserverName = 'sqlServerName${uniqueString(resourceGroup().id)}'
 var sqlPoolName = 'sqlElasticPool${uniqueString(resourceGroup().id)}'
 var databaseName = 'sampledb'
@@ -324,10 +326,48 @@ resource publicNat 'Microsoft.Network/natGateways@2021-08-01' = {
   }
 }
 
-// -- App Service Plan
+// -- Public App Service
 
-resource hostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
-  name: hostingPlanName
+resource publicHostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
+  name: publicHostingPlanName
+  location: location
+  tags: {
+    displayName: 'PublicHostingPlan'
+  }
+  sku: {
+    name: skuName
+    capacity: skuCapacity
+  }
+}
+
+resource publicWebsite 'Microsoft.Web/sites@2020-12-01' = {
+  name: publicWebsiteName
+  location: location
+  tags: {
+    'hidden-related:${publicHostingPlan.id}': 'empty'
+    displayName: 'Website'
+  }
+  properties: {
+    serverFarmId: publicHostingPlan.id
+    virtualNetworkSubnetId: publicVnet.properties.subnets[0].id
+    siteConfig: {
+      vnetRouteAllEnabled: true
+    }
+  }
+}
+
+resource publicAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: publicWebsite
+  name: 'appsettings'
+  properties: {
+    WEBSITE_NODE_DEFAULT_VERSION: 'Production'
+  }
+}
+
+// -- Private App Service
+
+resource privateHostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
+  name: privateHostingPlanName
   location: location
   tags: {
     displayName: 'HostingPlan'
@@ -338,38 +378,27 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
   }
 }
 
-resource website 'Microsoft.Web/sites@2020-12-01' = {
-  name: websiteName
+resource privateWebsite 'Microsoft.Web/sites@2020-12-01' = {
+  name: privateWebsiteName
   location: location
   tags: {
-    'hidden-related:${hostingPlan.id}': 'empty'
+    'hidden-related:${privateHostingPlan.id}': 'empty'
     displayName: 'Website'
   }
   properties: {
-    serverFarmId: hostingPlan.id
-    virtualNetworkSubnetId: publicVnet.properties.subnets[0].id
+    serverFarmId: privateHostingPlan.id
+    virtualNetworkSubnetId: privateVnet.properties.subnets[1].id
     siteConfig: {
       vnetRouteAllEnabled: true
     }
   }
 }
 
-resource appSettings 'Microsoft.Web/sites/config@2022-03-01' = {
-  parent: website
+resource privateAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: privateWebsite
   name: 'appsettings'
   properties: {
     WEBSITE_NODE_DEFAULT_VERSION: 'Production'
-  }
-}
-
-resource webSiteConnectionStrings 'Microsoft.Web/sites/config@2020-12-01' = {
-  parent: website
-  name: 'connectionstrings'
-  properties: {
-    DefaultConnection: {
-      value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${databaseName};User Id=${sqlAdministratorLogin}@${sqlServer.properties.fullyQualifiedDomainName};Password=${sqlAdministratorLoginPassword};'
-      type: 'SQLAzure'
-    }
   }
 }
 
@@ -377,7 +406,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: 'AppInsights${website.name}'
   location: location
   tags: {
-    'hidden-link:${website.id}': 'Resource'
     displayName: 'AppInsightsComponent'
   }
   kind: 'web'
@@ -387,5 +415,5 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 output sqlserverDns string = '${sqlserverName}${environment().suffixes.sqlServerHostname}'
-output publicWebsiteScmDns string = '${websiteName}.scm.azurewebsites.net'
-output websiteName string = websiteName
+output publicWebsiteScmDns string = '${publicWebsiteName}.scm.azurewebsites.net'
+output publicWebsiteName string = publicWebsiteName
