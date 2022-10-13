@@ -403,7 +403,7 @@ resource privateAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'AppInsights${website.name}'
+  name: 'AppInsights'
   location: location
   tags: {
     displayName: 'AppInsightsComponent'
