@@ -23,7 +23,6 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: 'Run az commands'
         run: |
-          az account show
           az group create --location ${{ secrets.AZURE_LOCATION }} --resource-group ${{ secrets.RESOURCE_GROUP_NAME }}
       - name: 'Deploy Bicep'
         id: deploy
@@ -36,20 +35,24 @@ jobs:
           failOnStderr: true
       - name: 'Check sqlserver DNS result from public'
         run: | 
-         az rest --method post --resource https://management.core.windows.net --url https://websitebmchpnzjithzo.scm.azurewebsites.net/api/command --body '{"command": "nslookup ${{ steps.deploy.outputs.sqlserverDns }}","dir": "C:\\home\\site\\wwwroot"}' --headers Content-Type=application/json
+          az rest --method post --resource https://management.core.windows.net --url https://websitebmchpnzjithzo.scm.azurewebsites.net/api/command --body '{"command": "nslookup ${{ steps.deploy.outputs.sqlserverDns }}","dir": "C:\\home\\site\\wwwroot"}' --headers Content-Type=application/json
+      - name: 'Fetch DeploymentSettings'
+        run: |
+          az rest --method get --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: dotnet build and publish
+        working-directory: ./application
         run: |
-          dotnet build --configuration Release --project application
-          dotnet publish -c Release --project application -o ./publish
-          az rest --method get --url https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Web/sites/${{ steps.deploy.outputs.websiteName }}/publishxml?api-version=2018-11-01 --output-file my.PublishSettings
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet publish -c Release -o ./publish
       - name: 'Deploy public application'
         uses: azure/webapps-deploy@v2
         with:
           app-name: Website
-          package: ./publish
+          package: ./application/publish
           publish-profile: ./my.PublishSettings
         
