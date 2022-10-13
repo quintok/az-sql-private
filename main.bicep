@@ -398,7 +398,7 @@ resource privateAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
   parent: privateWebsite
   name: 'appsettings'
   properties: {
-    DOTNET_ENVIRONMENT: 'Production'
+    DOTNET_ENVIRONMENT: 'Private'
   }
 }
 
